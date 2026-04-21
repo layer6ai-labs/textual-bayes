@@ -1,0 +1,58 @@
+method: textual-bayes
+
+defaults:
+- mcmc: malangevin
+
+# Engines for the dataset
+closed_engine: gpt-4o-mini
+open_engine:
+  _target_: method.tgext.together.ChatTogetherLogProb
+  model_string: meta-llama/Llama-3.3-70B-Instruct-Turbo
+
+# MCMC parameters
+steps: 50
+burn_in: 50
+thinning: 1
+num_chains: 1
+num_repeats: 1  # Number of times to repeat each sampled model
+
+# The self-refine LLM-based system
+model:
+  _partial_: true
+  _target_: method.models.SelfRefineModel
+  engine: ${method.closed_engine}
+  num_refine_steps: 1
+
+# An Optimizer partial that, once instantiated, takes in model parameters
+optimizer:
+  _partial_: true
+  _target_: method.tgext.optimizer.TextualGradientDescentLogProb
+  constraints:
+    - The system prompt must be at most one short paragraph.
+    - The system prompt must be generic and applicable to any question.
+    - The system prompt must not include formatting instructions for the last line of the response since they will be provided separately.
+  verbose: false
+  engine: ${method.open_engine}
+
+# A Proposal partial that, once instantiated, takes in a model and an optimizer
+proposal:
+  _partial_: true
+  _target_: method.mcmc.proposals.TextGradProposal
+  likelihood_loss:
+    _target_: method.losses.LikelihoodLoss
+    evaluation_instruction: ${data.likelihood_loss_text}
+    role_description: ${data.likelihood_loss_role},
+    input_roles: ${data.likelihood_loss_input_roles}
+    engine: ${method.closed_engine}
+
+chain_kwargs:
+  # Args to be passed into the model during MCMC sampling
+  temperature: 1
+  top_p: 1.0
+
+eval_kwargs:
+  num_examples: 100  # Number of examples to evaluate on
+
+  # Args to be passed into the model at inference time
+  temperature: 1
+  top_p: 1.0

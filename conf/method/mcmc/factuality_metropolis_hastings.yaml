@@ -1,0 +1,9 @@
+_target_: method.mcmc.MetropolisHastingsFactuality
+_partial_: true
+likelihood_answer_regex: ${data.likelihood_answer_regex}
+likelihood_param_addendum: ${data.likelihood_param_addendum}
+likelihood_beta: 100000
+prior_meta_prompts: ${data.prior_meta_prompts}
+engine:
+  _target_: method.tgext.together.ChatTogetherLogProb
+  model_string: meta-llama/Llama-3.3-70B-Instruct-Turbo

@@ -1,0 +1,57 @@
+dataset: mmlu-pro
+num_multi_choices: 10
+batch_size: 1
+chain_split: validation
+eval_split: test
+
+# Transform
+transform:
+  _target_: utils.data_processor.prepare_multi_choice_example
+  _partial_: true
+
+# Regex
+answer_regex: Answer:\s*([A-J])
+
+# Model
+params_data:
+  # Each param is defined as a DictConfig here and then will be parsed into a dataclass
+  - name: system_prompt
+    value: Answer the multiple-choice question. Think step-by-step.
+    role: system prompt for a multiple-choice question-answering language model
+    addendum: >-
+      The last line of your response must always and only be of the following
+      format: "Answer: LETTER" (without quotes) where LETTER is one of ABCDEFGHIJ.
+    addendum_role: formatting instructions for the last line of the language model's response
+
+# Proposal
+likelihood_loss_text: >-
+  You will be given a multiple-choice question and an answer attempted by a
+  language model. Evaluate the attempted answer. Be smart, logical, and very
+  critical. Do not solve the question just provide concise feedback.
+likelihood_loss_role: answer evaluation instructions for the multiple-choice task
+likelihood_loss_input_roles: ["question", "correct answer", "attempted answer"]
+
+# MCMC
+likelihood_answer_regex: (Answer:\s*)[A-J]
+likelihood_param_addendum: >-
+  The last line of your response must always and only be of the following
+  format: "Answer: LETTER" (without quotes) where LETTER is one of ABCDEFGHIJ.
+prior_meta_prompts:
+  # Each param can have its own prior -- make sure the order is the same as in `params_data` above
+  - >-
+    Generate a good system prompt for a multiple-choice question-answering language
+    model. The system prompt must be concise and generic and works with any question.
+
+# Evaluation
+evaluator:
+  _target_: evaluation.datasets.MultiChoiceEvaluator
+  _partial_: true
+  answer_regex: ${data.answer_regex}
+  choices: [A, B, C, D, E, F, G, H, I, J]
+
+baseline_eval_fn:
+  _target_: method.baseline.evaluate.baseline_multi_choice
+  _partial_: true
+  answer_regex: ${data.answer_regex}
+  choices: [A, B, C, D, E, F, G, H, I, J]
+

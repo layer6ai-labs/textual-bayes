@@ -1,0 +1,23 @@
+output_dir: ${get_output_dir:}
+
+hydra:
+  run:
+    dir: ${output_dir}  # Custom output directory
+  job_logging:
+    root:
+      level: INFO  # Ensure INFO logs are printed
+    formatters:
+      simple:
+        format: '%(asctime)s - %(levelname)s - %(message)s'
+    handlers:
+      console:
+        class: logging.StreamHandler
+        level: INFO
+        formatter: simple
+      file:
+        class: logging.FileHandler
+        formatter: simple
+        filename: ${output_dir}/log.txt
+        mode: w
+
+random_seed: 42

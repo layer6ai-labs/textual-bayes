@@ -1,0 +1,55 @@
+dataset: factscore
+batch_size: 1
+chain_split: train
+eval_split: test
+
+# Model
+params_data:
+  # Each param is defined as a DictConfig here and then will be parsed into a dataclass
+    - name: system_prompt
+      value: You are a helpful assistant write Bio for people.
+      role: system prompt for a bio writing model
+      addendum: >-
+        Your response must always and only be of the following
+        format: "Bio: VALUE" (without quotes) where VALUE is a factual statement
+        about the person.
+      addendum_role: formatting instructions for the last line of the language model's response
+    
+# Transform
+transform:
+  _target_: utils.data_processor.prepare_factscore_example
+  _partial_: true
+
+# Proposal
+likelihood_loss_text: >-
+  You are given a bio writing task, an answer attempted by a language
+  model, and the annotation of factuality on subclaims of the answer. The bio should include factual information about the person 
+  without hallucinated or made up content.
+  Evaluate the attempted answer. Be smart, logical, and very critical.
+  Do not write the bio. Just provide concise feedback.
+likelihood_loss_role: answer evaluation instructions for the bio writing task
+likelihood_loss_input_roles: ["question", "answer attempted by a language model", "factuality annotation"]
+
+# MCMC
+likelihood_answer_regex: (Bio:\s*)\w+
+likelihood_param_addendum: >-
+  Your response must always and only be of the following
+  format: "Bio: VALUE" (without quotes) where VALUE is a factual statement
+  about the person.
+prior_meta_prompts:
+  # Each param can have its own prior -- make sure the order is the same as in `params_data` above
+  - >-
+    Generate a good system prompt for a bio writing task. The system prompt must be concise and generic and works with any question.
+
+
+# Evaluation
+evaluator:
+  _target_: evaluation.datasets.ConformalFactualityEvaluator
+  _partial_: true
+  system_prompt: You are a helpful assistant write Bio for people.
+  base_model: gpt-4
+  answer_regex: Bio:\s*(.+)
+  dataset_name: factscore
+  a: 1
+  conformal_runs: 1000
+  annotation_file: !!null

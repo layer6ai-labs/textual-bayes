@@ -1,0 +1,66 @@
+dataset: gsm8k
+batch_size: 1
+chain_split: train
+eval_split: test
+
+# Transform
+transform:
+  _target_: utils.data_processor.prepare_gsm8k_example
+  _partial_: true
+
+# Model
+params_data:
+  # Each param is defined as a DictConfig here and then will be parsed into a dataclass
+  - name: generation_system_prompt
+    value: Answer the math question. Think step-by-step.
+    role: system prompt for a math question-answering language model
+    addendum: >-
+      The last line of your response must always and only be of the following
+      format: "Answer: VALUE" (without quotes) where VALUE is a numerical value.
+    addendum_role: formatting instructions for the last line of the language model's response
+  - name: feedback_system_prompt
+    value: Provide feedback on the answer to the math question.
+    role: system prompt for a language model that provides feedback on answers to math questions
+    input_roles: ["question", "attempted answer"]
+  - name: refine_system_prompt
+    value: Refine the answer to the math question based on the provided feedback.
+    role: system prompt for a language model that refines answers to math questions based on provided feedback
+    addendum: >-
+      The last line of your response must always and only be of the following
+      format: "Answer: VALUE" (without quotes) where VALUE is a numerical value.
+    addendum_role: formatting instructions for the last line of the language model's response
+    input_roles: ["question", "attempted answer", "feedback on the attempted answer"]
+
+# Proposal
+likelihood_loss_text: >-
+  You will be given a math question and an answer attempted by a language
+  model. Evaluate the attempted answer. Be smart, logical, and very critical.
+  Do not solve the question. Just provide concise feedback.
+likelihood_loss_role: answer evaluation instructions for the math task
+# These roles must match the corresponding `input_roles` in `params_data`
+likelihood_loss_input_roles: ["question", "correct answer", "attempted answer"]
+
+# MCMC
+likelihood_answer_regex: (Answer:\s*)\d+
+likelihood_param_addendum: >-
+  The last line of your response must always and only be of the following
+  format: "Answer: VALUE" (without quotes) where VALUE is a numerical value.
+prior_meta_prompts:
+  # Each param can have its own prior -- make sure the order is the same as in `params_data` above
+  - >-
+    Generate a good system prompt for a math question-answering language
+    model. The system prompt must be concise and generic and works with any question.
+  - >-
+    Generate a good system prompt for a language model that provides
+    feedback on answers to math questions. The system prompt must be
+    concise and generic and works with any question.
+  - >-
+    Generate a good system prompt for a language model that refines answers
+    to math questions based on provided feedback. The system prompt must be
+    concise and generic and works with any question.
+
+# Evaluation
+eval_fn:
+  _target_: evaluation.datasets.evaluate_gsm8k
+  _partial_: true
+  answer_regex: Answer:\s*(\d+)

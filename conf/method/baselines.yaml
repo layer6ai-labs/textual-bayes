@@ -1,0 +1,78 @@
+method: baseline
+n: 10 # Perturbation per question
+
+engine:
+  _target_: method.baseline.engine.OpenAIEngine
+  model_name: gpt-4o-mini
+
+perturber_select: paraphrasing # Select ONE perturber below
+perturbers:
+  simple_sample:
+    _target_: method.baseline.perturb.SimpleSample
+  temperature:
+    _target_: method.baseline.perturb.TemperaturePerturber
+    t_min: 0.0
+    t_max: 1.0
+  paraphrasing:
+    _target_: method.baseline.perturb.ParaphrasingPerturber
+    ans_temp: 1.0
+  sys_msg:
+    _target_: method.baseline.perturb.SysMsgPerturber
+    ans_temp: 1.0
+    system_messages: null # Use default in source
+  dummy_token:
+    _target_: method.baseline.perturb.DummyTokenPerturber
+    dummy_tokens: null # Use default in source
+
+# --- Aggregator Configuration ---
+aggregator_select: FrequencyUQ # Select ONE aggregator below
+
+aggregators:
+  FrequencyUQ:
+    _target_: method.baseline.aggregate.FrequencyUQ
+  RougeLUQ:
+    _target_: method.baseline.aggregate.RougeLUQ
+    weighted: true
+  SbertUQ:
+    _target_: method.baseline.aggregate.SbertUQ
+    weighted: true
+  BertUQ:
+    _target_: method.baseline.aggregate.BertUQ
+    weighted: true
+    lang: "en"
+  Ask4ConfWordUQ:
+    _target_: method.baseline.aggregate.Ask4ConfWordUQ
+    weighted: false
+    # engine passed by runner
+  Ask4ConfNumUQ:
+    _target_: method.baseline.aggregate.Ask4ConfNumUQ
+    weighted: false
+    # engine passed by runner
+  SemanticFrequencyUQ:
+    _target_: method.baseline.aggregate.SemanticFrequencyUQ
+    llm_engine: gpt-4o
+  LaplacianEigenvalueUQ:
+    _target_: method.baseline.aggregate.LaplacianEigenvalueUQ
+    entailment_model: "deberta"
+    strict_entailment: false
+    llm_engine: gpt-4o-mini
+  LaplacianDegreeUQ:
+    _target_: method.baseline.aggregate.LaplacianDegreeUQ
+    entailment_model: "deberta"
+    strict_entailment: false
+    llm_engine: gpt-4o-mini
+  SemanticVNEUq:
+    _target_: method.baseline.aggregate.SemanticVNEUq
+    entailment_model: "deberta"
+    strict_entailment: false
+    llm_engine: gpt-4o-mini
+  SemanticEntropyUQ:
+    _target_: method.baseline.aggregate.SemanticEntropyUQ
+    entailment_model: "deberta"
+    strict_entailment: false
+    llm_engine: gpt-4o-mini
+    # use_logprobs is not in init and not set in here
+
+eval_kwargs:
+  num_examples: 100
+

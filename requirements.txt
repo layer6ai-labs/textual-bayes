@@ -1,0 +1,14 @@
+bert-score
+black
+datasets
+evaluate
+hydra-core
+isort
+namesgenerator
+python-dotenv
+scikit-learn
+rouge-score
+scipy
+sentence-transformers
+textgrad[vllm]
+together

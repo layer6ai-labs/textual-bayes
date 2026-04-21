@@ -1,0 +1,3 @@
+# Langevin partial that, once instantiated, takes in a proposal
+_partial_: true
+_target_: method.mcmc.methods.LangevinDynamics

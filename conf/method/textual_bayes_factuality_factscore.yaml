@@ -1,0 +1,55 @@
+method: textual-bayes
+
+defaults:
+- mcmc: factuality_metropolis_hastings
+
+# MCMC parameters
+steps: 20
+burn_in: 4
+thinning: 4
+num_chains: 1
+num_repeats: 1 # Number of times to repeat each sampled model
+
+# The LLM-based system for solving the QA problem
+model:
+  _partial_: true
+  _target_: method.models.SimpleModel
+  engine: gpt-4
+
+# An Optimizer partial that, once instantiated, takes in model parameters
+optimizer:
+  _partial_: true
+  _target_: method.tgext.optimizer.TextualGradientDescentLogProb
+  constraints:
+    - The system prompt must be at most one short paragraph.
+    - The system prompt must be generic and applicable to any question.
+    - The system prompt must not include formatting instructions for the final response since they will be provided separately.
+  verbose: false
+  engine:
+    _target_: method.tgext.together.ChatTogetherLogProb
+    model_string: meta-llama/Llama-3.3-70B-Instruct-Turbo
+
+
+# A Proposal partial that, once instantiated, takes in a model and an optimizer
+proposal:
+  _partial_: true
+  _target_: method.mcmc.proposals.TextGradProposal
+  likelihood_loss:
+    _target_: method.losses.FactualityBasedLoss
+    evaluation_instruction: ${data.likelihood_loss_text}
+    role_description: ${data.likelihood_loss_role},
+    input_roles: ${data.likelihood_loss_input_roles}
+    engine: gpt-4o-mini
+    factuality_model: gpt-4o-mini
+
+chain_kwargs:
+  # Args to be passed into the model at training time
+  temperature: 0
+  top_p: 1.0
+
+eval_kwargs:
+  num_examples: 50  # Number of examples to evaluate on
+
+  # Args to be passed into the model at inference time
+  temperature: 0
+  top_p: 1.0 
