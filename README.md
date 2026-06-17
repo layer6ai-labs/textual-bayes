@@ -2,6 +2,8 @@
 <a href="https://layer6.ai/"><img src="https://github.com/layer6ai-labs/DropoutNet/blob/master/logs/logobox.jpg" width="180"></a>
 </p>
 
+[![Paper](https://img.shields.io/badge/arXiv-2506.10060-b31b1b?logo=arxiv&logoWidth=10&link=https://arxiv.org/abs/2506.10060)](https://arxiv.org/abs/2506.10060)
+
 # Textual Bayes
 
 This is the codebase for the ICLR 2026 work [*Textual Bayes: Quantifying Prompt Uncertainty in LLM-Based Systems*](https://arxiv.org/abs/2506.10060) accepted to [ICLR 2026](https://iclr.cc/virtual/2026/poster/10009142).
@@ -74,3 +76,6 @@ If you find our work helpful in some way, please consider citing us in yours:
     url={https://openreview.net/forum?id=VPmsAr1OTl}
 }
 ```
+# License
+
+This data and code is licensed under the MIT License, copyright by Layer 6 AI.
